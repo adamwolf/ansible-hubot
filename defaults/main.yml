@@ -187,3 +187,4 @@ hubot_ubuntu_os_packages:
   - libicu-dev
   - openssl
   - redis-server
+  - nodejs-legacy # without this, /usr/bin/env node doesn't work and yo doesn't install on Ubuntu 14.04 at least.

@@ -9,19 +9,22 @@
     - system_packages
 
 - name: Install Node Version Manager
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   git: "repo=https://github.com/creationix/nvm.git dest={{ hubot_nvm_dir }} accept_hostkey=yes"
   tags:
     - node_nvm
 
 - name: Install Node.js
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   shell: "source {{ hubot_nvm_dir }}/nvm.sh && nvm install {{ hubot_node_version }} creates={{ hubot_node_dir }} executable=/bin/bash"
   tags:
     - node_packages
 
 - name: Install hubot global dependencies
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   npm: "name={{ item }} executable={{ hubot_node_dir }}/bin/npm path={{ hubot_dir }} state=present global=yes"
   with_items: hubot_global_node_packages
   tags:
@@ -32,6 +35,8 @@
   register: hubot_service_status
 
 - name: Stop Hubot service
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   service: name=hubot state=stopped
   when: hubot_service_status.stat.exists
 
@@ -40,33 +45,40 @@
   file: "path={{ hubot_dir }} state=absent"
 
 - name: Hubot home directory
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   file: "path={{ hubot_dir }} state=directory owner={{ hubot_admin }} group={{ hubot_admin }}"
   tags:
     - hubot_environment
 
 - name: Assemble Hubot
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   shell: "source {{ hubot_nvm_dir }}/nvm.sh && nvm use {{ hubot_node_version }} && echo 'n' | yo hubot --adapter={{ hubot_adapter }} --owner={{ hubot_owner }} --name={{ hubot_identity }} --description={{ hubot_description }} --defaults chdir={{ hubot_dir }} executable=/bin/bash"
 
 - name: Install hubot dependencies
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   npm: "name={{ item }} executable={{ hubot_node_dir }}/bin/npm path={{ hubot_dir }} state=present"
   with_items: hubot_node_packages
   tags:
     - node_packages
 
 - name: Define Hubot environment
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   template: "src=hubot.env.j2 dest={{ hubot_dir }}/{{ hubot_identity }}.env"
   tags:
     - hubot_environment
 
 - name: Install Hubot start script
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   template: "src=start-hubot.sh.j2 dest={{ hubot_dir }}/bin/start-hubot mode=0744"
 
 - name: Install custom Hubot scripts
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   copy: "src=scripts/{{ item }} dest={{ hubot_dir }}/scripts/{{ item }} owner={{ hubot_admin }} mode=0644"
   with_items: hubot_custom_scripts
   when: hubot_custom_scripts is defined
@@ -76,7 +88,8 @@
     - hubot_scripts
 
 - name: Configure Hubot scripts
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   template: "src=hubot-scripts.json.j2 dest={{ hubot_dir }}/hubot-scripts.json"
   when: hubot_scripts is defined
   notify:
@@ -85,7 +98,8 @@
     - hubot_scripts
 
 - name: Configure Hubot external scripts
-  sudo: False
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   template: "src=external-scripts.json.j2 dest={{ hubot_dir }}/external-scripts.json owner={{ hubot_admin }} group={{ hubot_admin }} mode=0644"
   when: hubot_external_scripts is defined
   notify:
@@ -93,6 +107,8 @@
   tags: hubot_scripts
 
 - name: Hubot log directory
+  sudo: True
+  sudo_user: "{{ hubot_admin }}"
   file: "path={{ hubot_dir }}/log state=directory owner={{ hubot_admin }} group={{ hubot_admin }}"
   tags:
     - hubot_environment
